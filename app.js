@@ -1,11 +1,18 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 //Middleware for login
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 const foodRoute = require('./api/routes/food');
 const userRoute = require('./api/routes/user');
+
+//AVOID USING HARDCODED password. Defining it as an env var
+mongoose.connect('mongodb+srv://lizwolf:JNhwAyBR1Mv78TW2@cluster0-s7mpd.mongodb.net/test?retryWrites=true',
+	{ useNewUrlParser: true }
+	);
 
 //dev format for the output
 app.use(morgan('dev'));
