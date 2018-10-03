@@ -10,9 +10,10 @@ router.post('/', (req, res, next) => {
 	//Constructor for a new DB object
 	const  user = new User({
 		_id: new mongoose.Types.ObjectId(), //create new id
-		email: req.body.email,
-		password: req.body.password,
+		email: req.body.email
 	});
+
+	user.password = user.generateHash(req.body.password);
 	//send it to MongoDB
 	user
 		.save()
