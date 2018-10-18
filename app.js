@@ -5,9 +5,12 @@ const app = express();
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const passport = require('passport');
 
 const foodRoute = require('./api/routes/food');
 const userRoute = require('./api/routes/user');
+
+
 
 //AVOID USING HARDCODED password. Defining it as an env var
 mongoose.connect('mongodb+srv://lizwolf:JNhwAyBR1Mv78TW2@cluster0-s7mpd.mongodb.net/test?retryWrites=true',
@@ -40,6 +43,11 @@ app.use((req, res, next) => {
 	next();
 });
 
+
+//Passport COnfig
+require('./passport')(passport);
+app.use(passport.initialize());
+app.use(passport.session());
 
 /*USE sets a middleware, which could be a function that 
 returns a response*/

@@ -12,15 +12,27 @@ router.get('/:foodName', (req, res, next) => {
 	    {
 	    	res.json({ error: 'cannot connect to food-database' });
 	    }
-	    else res.send(response.body)
+	    else //res.send(response.body)
 	    	//https://stackoverflow.com/questions/23731869/find-items-from-json-array-using-nodejs
+	    {
+	    	var result = JSON.parse(response.body);
+	    	//res.send(result.hints[0].food.label);
+	    	var foodINFO = [];
+	    	for (var i in result.hints)
+	    	{
+	    		foodINFO.push({
+	    			foodID : result.hints[i].food.foodId,
+		    		foodName : result.hints[i].food.label,
+		    		calories : result.hints[i].food.nutrients.ENERC_KCAL,
+					carbs : result.hints[i].food.nutrients.CHOCDF ? result.hints[i].food.nutrients.CHOCDF : 0,
+		    		proteins : result.hints[i].food.nutrients.PROCNT ? result.hints[i].food.nutrients.PROCNT : 0,
+		    		fats : result.hints[i].food.nutrients.FAT ? result.hints[i].food.nutrients.FAT : 0
+		    		//measure URI
+	    		});
+	    	}
+	    	res.send(JSON.stringify(foodINFO));
+	    }
 	})
-});
-
-router.post('/', (req, res, next) => {
-	res.status(200).json({
-		message: 'Handling Post'
-	});
 });
 
 module.exports = router;

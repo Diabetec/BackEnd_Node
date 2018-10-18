@@ -19,11 +19,15 @@
   "homepage": "https://github.com/Diabetec/BackEnd_Node#readme",
   "dependencies": {
     "bcrypt-nodejs": "0.0.3",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.3",
     "dotenv": "^6.0.0",
     "express": "^4.16.3",
+    "local": "^0.3.3",
     "mongoose": "^5.2.16",
     "morgan": "^1.9.1",
+    "passport": "^0.4.0",
+    "passport-local": "^1.0.0",
     "request": "^2.88.0"
   },
   "devDependencies": {
