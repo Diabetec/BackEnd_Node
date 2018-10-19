@@ -32,5 +32,9 @@
   },
   "devDependencies": {
     "nodemon": "^1.18.4"
+  },
+  "apidoc": {
+    "title": "Proyecto Integrador Node API",
+    "url" : " "
   }
 }
