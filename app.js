@@ -5,15 +5,16 @@ const app = express();
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const passport = require('passport');
 
 const foodRoute = require('./api/routes/food');
 const userRoute = require('./api/routes/user');
 
+const cors = require('cors');
+const config = require('./api/middleware/config.json');
+const jwt = require('./api/middleware/jwtAuth');
+const errorHandler = require('./api/middleware/errorHandler');
 
-
-//AVOID USING HARDCODED password. Defining it as an env var
-mongoose.connect('mongodb+srv://lizwolf:JNhwAyBR1Mv78TW2@cluster0-s7mpd.mongodb.net/test?retryWrites=true',
+mongoose.connect(config.connection,
 	{ useNewUrlParser: true }
 	);
 
@@ -22,7 +23,9 @@ app.use(morgan('dev'));
 //parse request bodies
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(cors())
 
+/*
 //Avoid CORS error (success because client & server are in the same place)
 app.use((req, res, next) => {
 	//Any origin(client) can have access
@@ -42,15 +45,12 @@ app.use((req, res, next) => {
 	//forward to the other middleware
 	next();
 });
+*/
 
-
-//Passport COnfig
-require('./passport')(passport);
-app.use(passport.initialize());
-app.use(passport.session());
 
 /*USE sets a middleware, which could be a function that 
 returns a response*/
+app.use(jwt());
 app.use('/food', foodRoute);
 app.use('/user', userRoute);
 //app.use('/userfood?', userRoute);

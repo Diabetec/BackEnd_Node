@@ -3,9 +3,13 @@ var request = require('request');
 //express-router, a subpackage for managing different routes
 const router = express.Router();
 const mongoose = require('mongoose');
-const passport = require('passport')
 
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+
+const config = require('../middleware/config.json');
 const User= require('../models/user')
+const userService = require('../middleware/userService');
 
 /**
  * @api {post} /user/signup Create new User
@@ -99,24 +103,12 @@ router.post('/signup', (req, res, next) => {
 	});
 });
 
-router.post('/login', (req, res, next) => {
-	passport.
 
-	//send it to MongoDB
-	user
-		.save()
-	    .then(result => {
-	      console.log(result);
-	      res.status(201).json({
-	        //
-	      });
-	    })
-	    .catch(err => {
-	      console.log(err);
-	      res.status(500).json({
-	        error: err
-	      });
-	});
+router.post('/login', (req, res, next) => {
+	userService.authenticate(req.body)
+	    .then(user => 
+	    	user ? res.json(user) : res.status(400).json({ message: 'Username or password is incorrect' }))
+	    .catch(err => next(err));
 });
 
 
