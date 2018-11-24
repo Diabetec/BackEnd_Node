@@ -12,7 +12,7 @@ const userRoute = require('./api/routes/user');
 const cors = require('cors');
 const config = require('./api/middleware/config.json');
 const jwt = require('./api/middleware/jwtAuth');
-const errorHandler = require('./api/middleware/errorHandler');
+//const errorHandler = require('./api/middleware/errorHandler');
 
 mongoose.connect(config.connection,
 	{ useNewUrlParser: true }

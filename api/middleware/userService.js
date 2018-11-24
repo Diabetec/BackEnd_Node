@@ -10,7 +10,7 @@ module.exports = {
 
 async function authenticate({ email, password }) {
     const user = await User.findOne({ email });
-    if (user.validPassword) {
+    if (user.validPassword(password)) {
         const { hash, ...userWithoutHash } = user.toObject();
         const token = jwt.sign({ sub: user.id }, config.secret);
         return {
