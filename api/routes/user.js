@@ -9,6 +9,7 @@ const bcrypt = require('bcryptjs');
 
 const config = require('../middleware/config.json');
 const User= require('../models/user')
+const Ufood= require('../models/userfood')
 const userService = require('../middleware/userService');
 
 /**
@@ -25,6 +26,7 @@ const userService = require('../middleware/userService');
  *			"password" : "secret",
  *			"name" : "Liz",
  *			"age" : 22,
+ *			"sex" : "mujer",
  *			"height" : 1.76,
  *			"weight" : 69.8
  *		}
@@ -33,11 +35,13 @@ const userService = require('../middleware/userService');
  * @apiParam {String} password Client password
  * @apiParam {String} [name] Client's name
  * @apiParam {Number} [age] Client's age
+ * @apiParam {Number} [sex] Client's sex
  * @apiParam {Number} [height] Client's height
  * @apiParam {Number} [weight] Client's weight
  *
  * @apiSuccess {String} _id return new user id
  * @apiSuccess {String} [name] Client's name (if exists)
+ * @apiSuccess {String} [sex] Client's sex (if exists)
  * @apiSuccess {Number} [age]  Client's age (if exists)
  * @apiSuccess {Number} [height]  Client's height (if exists)
  * @apiSuccess {Number} [weight]  Client's weight (if exists)
@@ -52,9 +56,11 @@ const userService = require('../middleware/userService');
  *		        "_id": "5bc91d49b6245617546eeaf7",
  *		        "name": "Liz",
  *		        "age": 22,
+ *		        "sex": "mujer",
  *		        "height": 1.76,
  *		        "weight": 69.8,
  *		        "email": "email3@gmail.com",
+ *				"foods": [],
  *		        "password": "$2a$08$/8Wv2PV/CRcVWzNdsiKxwulclz4vOo8mAhKB3Biaa6P9dU1cHsi/.",
  *		        "__v": 0
  *			}
@@ -72,6 +78,7 @@ const userService = require('../middleware/userService');
  *				"errmsg": "E11000 duplicate key error collection: test.users index: email_1 dup key: { : \"email@gmail.com\" }"
  *			}
  *		}
+ *
  */
 router.post('/signup', (req, res, next) => {
 	//Constructor for a new DB object
@@ -79,6 +86,7 @@ router.post('/signup', (req, res, next) => {
 		_id: new mongoose.Types.ObjectId(), //create new id
 		name: req.body.name,
 		age: req.body.age,
+		sex: req.body.sex,
 		height: req.body.height,
 		weight: req.body.weight,
 		email: req.body.email
@@ -103,12 +111,169 @@ router.post('/signup', (req, res, next) => {
 	});
 });
 
-
+/**
+ * @api {post} /login Retrieve User information
+ * @apiName loginUser
+ * @apiGroup User
+ *
+ * @apiExample {JSON} Example usage:
+ *		localhost:3000/user/login
+ *		Headers: Content-Type application/json
+ *		Body
+ *		{
+ *			"email" : "email@gmail.com",
+ *			"password" : "secret"
+ *		}
+ *
+ * @apiParam  {String} email registration email
+ * @apiParam  {String} password corresponding password
+ *
+ * @apiSuccess {String} _id return new user id
+ * @apiSuccess {String} email  Client's email
+ * @apiSuccess {String} password  encrypted password
+ * @apiSuccess {String} token  login auth token
+ *
+ * @apiSuccessExample Success-Response:
+ *		HTTP 200 OK
+ *		{
+ *			"_id": "5bb47b626271b813e0abbc44",
+ *			"email": "hashed@gmail.com",
+ *			"password": "$2a$08$sxTWAKHvK7it/aPbIxAPk.n506b5U7MiyxRRmwp9uisp3z/kJkje.",
+ *			"__v": 0,
+ *			"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1YmI0N2I2MjYyNzFiODEzZTBhYmJjNDQiLCJpYXQiOjE1NDMxODc2ODZ9.5yawf_wIYnGvLwLNxmpQklr2CObLfysFa0QW5tYhmAU"
+ *		}
+ *
+ * @apiErrorExample Wrong Password:
+ *		HTTP 400 Bad Request
+ *		{
+ *			"message": "Username or password is incorrect"
+ *		}
+ *
+ * @apiErrorExample Wrong Params:
+ *		HTTP 500 Internal Server error
+ *		{
+ *			"error" : {}
+ *		}
+ *
+ */
 router.post('/login', (req, res, next) => {
 	userService.authenticate(req.body)
 	    .then(user => 
 	    	user ? res.json(user) : res.status(400).json({ message: 'Username or password is incorrect' }))
 	    .catch(err => next(err));
+});
+
+/**
+ * @api {post} /history
+ * @apiName postHistory
+ * @apiGroup ufood
+ *
+ * @apiExample {JSON} Example usage:
+ *		localhost:3000/user/history
+ *		Authorization: Bearer Token {LOGIN_TOKEN}
+ *		Headers: Content-Type application/json
+ *		Body
+ *		{
+ *			"label":"enchiladas",
+ *			"calories":10,
+ *			"carbs":8,
+ *			"fats":6,
+ *			"proteins":7
+ *		}
+ *
+ * @apiParam  {String} label name of selected dish
+ * @apiParam  {Number} calories calories in dish
+ * @apiParam  {Number} carbs carbs in dish
+ * @apiParam  {Number} fats fats in dish
+ * @apiParam  {Number} proteins proteins in dish
+ *
+ * @apiSuccess  {String} _id food's id in our DB
+ * @apiSuccess  {Date} date food add date
+ * @apiSuccess  {String} label food name
+ * @apiSuccess  {Number} calories calories in dish
+ * @apiSuccess  {Number} carbs carbs in dish
+ * @apiSuccess  {Number} fats fats in dish
+ * @apiSuccess  {Number} proteins proteins in dish
+ *
+ * @apiSuccessExample Success-Response:
+ *		HTTP 200 OK
+ *		{
+ *			"message": "New food added to history",
+ *			"food": {
+ *				"_id": "5bfb3360f0421b08749acec0",
+ *				"date": "2018-11-25T23:42:24.131Z",
+ *				"label": "Enchiladas suizas con pollo",
+ *				"calories": 10,
+ *				"carbs": 8,
+ *				"fats": 6,
+ *				"proteins": 7,
+ *				"__v": 0
+ *			}
+ *		}
+ *
+ *
+ * @apiErrorExample Wrong Params:
+ *		HTTP 500 Internal Server error
+ *		{
+ *			"error" : {}
+ *		}
+ *
+ */
+router.post('/history/:userID', (req, res, next) => {
+	const userId = req.params.userID;
+	const  ufood = new Ufood({
+		_id: new mongoose.Types.ObjectId(), //create new id
+		date: new Date(),
+		//image : ?????????????
+		label: req.body.label,
+		calories: req.body.calories ? req.body.calories : 0,
+		carbs: req.body.carbs ? req.body.carbs : 0,
+		fats: req.body.fats ? req.body.fats : 0,
+		proteins: req.body.proteins ? req.body.proteins : 0
+	});
+
+	//send it to MongoDB
+	User.update({ _id: userId }, { $push: { foods : ufood }})
+	.exec()
+	.then(result => {
+	  console.log(result);
+	  res.status(200).json(ufood);
+	})
+	.catch(err => {
+	  console.log(err);
+	  res.status(500).json({
+	    error: err
+	  });
+	});
+});
+
+router.get('/history', (req, res, next) => {
+	// YYYY,MM,DD
+	//const userId = mongoose.Types.ObjectId(req.query.userID);
+	const userId = req.query.userID;
+	const year = req.query.year;
+	const month = req.query.month;
+	const day = req.query.day;
+	date = new Date(year, month, day);
+	console.log(userId);
+	//User.find({ _id: userId, "foods.date":{"$gte": new Date(year, month, day)}})
+	User.find().where({ _id: userId})
+		.exec()
+		.then(result => {
+			console.log(result.foods);
+			//send response once I know it was actually successfull
+			if (result.foods) {
+				res.status(200).json(result.foods);
+		    } else {
+		        res
+		          .status(404)
+		          .json({ message: "No valid entry found for provided date" });
+			}
+		})
+		.catch(err => {
+			console.log(err);
+			res.status(500).json({error: err});
+		});
 });
 
 
@@ -131,7 +296,7 @@ router.post('/login', (req, res, next) => {
  * @apiSuccess {String} password  encrypted password
  *
  * @apiSuccessExample Success-Response:
- *		HTTP 201 Created
+ *		HTTP 200 Ok
  *		{
  *			"_id": "5bc91d49b6245617546eeaf7",
  *			"name": "Liz",
@@ -139,8 +304,19 @@ router.post('/login', (req, res, next) => {
  *			"height": 1.76,
  *			"weight": 69.8,
  *			"email": "email3@gmail.com",
- *			"password": "$2a$08$/8Wv2PV/CRcVWzNdsiKxwulclz4vOo8mAhKB3Biaa6P9dU1cHsi/."
- *		}
+ *			"password": "$2a$08$/8Wv2PV/CRcVWzNdsiKxwulclz4vOo8mAhKB3Biaa6P9dU1cHsi/.",
+ *			"foods": 
+ *			[
+ *				{
+ *					"_id": "5bfb4b8ec9f0d61ac88ecbfb",
+ *					"date": "2018-11-26T01:25:34.754Z",
+ *					"label": "enchilada",
+ *					"calories": 10,
+ *					"carbs": 8,
+ *					"fats": 6,
+ *					"proteins": 7
+ *				}
+ *			]
  *
   * @apiErrorExample Not Found Error:
  *		HTTP 404 Not Found
