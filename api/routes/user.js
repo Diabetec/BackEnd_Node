@@ -164,9 +164,9 @@ router.post('/login', (req, res, next) => {
 });
 
 /**
- * @api {post} /history
+ * @api {post} /history Add user's food
  * @apiName postHistory
- * @apiGroup ufood
+ * @apiGroup User
  *
  * @apiExample {JSON} Example usage:
  *		localhost:3000/user/history
@@ -247,6 +247,72 @@ router.post('/history/:userID', (req, res, next) => {
 	});
 });
 
+/**
+ * @api {get} /history get user's food from specific day
+ * @apiName postHistory
+ * @apiGroup User
+ *
+ * @apiExample {JSON} Example usage:
+ *		localhost:3000/user/history?userID={id}&year={year}&month={month}&day={day}
+ *		Authorization: Bearer Token {LOGIN_TOKEN}
+ *		Headers: Content-Type application/json
+ *
+ *		userID = 5bb47b626271b813e0abbc44
+ *		year = 2018
+ *		month = 08
+ *		day = 21
+ *
+ * @apiParam  {String} userID user id
+ * @apiParam  {String} year searched year
+ * @apiParam  {String} month searched month
+ * @apiParam  {String} day searched day
+ *
+ * @apiSuccess  {String} _id food's id in our DB
+ * @apiSuccess  {Date} date food add date
+ * @apiSuccess  {String} label food name
+ * @apiSuccess  {Number} calories calories in dish
+ * @apiSuccess  {Number} carbs carbs in dish
+ * @apiSuccess  {Number} fats fats in dish
+ * @apiSuccess  {Number} proteins proteins in dish
+ *
+ * @apiSuccessExample Success-Response:
+ *		HTTP 200 OK
+ *		[
+ *			"food": {
+ *				"_id": "5bfb3360f0421b08749acec0",
+ *				"date": "2018-11-25T23:42:24.131Z",
+ *				"label": "Enchiladas suizas con pollo",
+ *				"calories": 10,
+ *				"carbs": 8,
+ *				"fats": 6,
+ *				"proteins": 7,
+ *				"__v": 0
+ *			},
+  *			"food": {
+ *				"_id": "5bfb3360f0421b08749acecb",
+ *				"date": "2018-11-25T23:42:24.131Z",
+ *				"label": "Quesadillas",
+ *				"calories": 10,
+ *				"carbs": 8,
+ *				"fats": 6,
+ *				"proteins": 7,
+ *				"__v": 0
+ *			}
+ *		]
+ *
+ * @apiErrorExample Not Found Error:
+ *		HTTP 404 Not Found
+ *		{
+ *			"message": "No valid entry found for provided date"
+ *		}
+ *
+ * @apiErrorExample Wrong Params:
+ *		HTTP 500 Internal Server error
+ *		{
+ *			"error" : {}
+ *		}
+ *
+ */
 router.get('/history', (req, res, next) => {
 	// YYYY,MM,DD
 	//const userId = mongoose.Types.ObjectId(req.query.userID);
@@ -254,15 +320,15 @@ router.get('/history', (req, res, next) => {
 	const year = req.query.year;
 	const month = req.query.month;
 	const day = req.query.day;
-	date = new Date(year, month, day);
-	console.log(userId);
+	const dayStart = new Date(new Date(new Date(year, month-1, day).setDate(new Date(year, month-1, day).getDate(year, month-1, day)-1)).setHours(00,00,00));
+	const dayEnd = new Date(new Date(new Date(year, month-1, day).setDate(new Date(year, month-1, day).getDate(year, month-1, day))).setHours(00,00,00));
 	//User.find({ _id: userId, "foods.date":{"$gte": new Date(year, month, day)}})
-	User.find().where({ _id: userId})
+	User.findOne({ _id: userId, "foods.date":{"$lt":dayEnd, "$gte": dayStart}})
 		.exec()
 		.then(result => {
-			console.log(result.foods);
 			//send response once I know it was actually successfull
-			if (result.foods) {
+			if (result) {
+				console.log(result.foods);
 				res.status(200).json(result.foods);
 		    } else {
 		        res
@@ -284,6 +350,8 @@ router.get('/history', (req, res, next) => {
  *
  * @apiExample {JSON} Example usage:
  *		localhost:3000/user/5bc91d49b6245617546eeaf7
+ *
+ *		Authorization: Bearer Token {LOGIN_TOKEN}
  * 
  * @apiParam  {String} userId user ID in DB 
  *
@@ -318,7 +386,7 @@ router.get('/history', (req, res, next) => {
  *				}
  *			]
  *
-  * @apiErrorExample Not Found Error:
+ * @apiErrorExample Not Found Error:
  *		HTTP 404 Not Found
  *		{
  *			"message": "No valid entry found for provided ID"
@@ -365,6 +433,7 @@ router.get('/:userID', (req, res, next) => {
  *
  * @apiExample {JSON} Example usage:
  *		localhost:3000/user/5bc91d49b6245617546eeaf7
+ *		Authorization: Bearer Token {LOGIN_TOKEN}
  *		Headers: Content-Type application/json
  *		Body
  *		[
@@ -425,7 +494,7 @@ router.patch('/:userID', (req, res, next) => {
 	const id = req.params.userID;
 	const updateOps = {};
 	for (const ops of req.body) {
-		if (ops.propName = "password")
+		if (ops.propName == "password")
 		{
 			updateOps[ops.propName] = user.generateHash(ops.value);
 		}
@@ -434,6 +503,7 @@ router.patch('/:userID', (req, res, next) => {
 			updateOps[ops.propName] = ops.value;
 		}
 	}
+	console.log(updateOps);
 	User.update({ _id: id }, { $set: updateOps })
 	.exec()
 	.then(result => {
@@ -455,6 +525,8 @@ router.patch('/:userID', (req, res, next) => {
  *
  * @apiExample {JSON} Example usage:
  *		localhost:3000/user/5bc91d49b6245617546eeaf7
+ *
+ *		Authorization: Bearer Token {LOGIN_TOKEN}
  *
  * @apiParam  {String} userId user ID in DB 
  *
