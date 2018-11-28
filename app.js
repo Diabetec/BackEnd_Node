@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
+const path = require('path');
 //Middleware for login
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
@@ -50,6 +51,7 @@ app.use((req, res, next) => {
 
 /*USE sets a middleware, which could be a function that 
 returns a response*/
+app.use("/front-web", express.static(path.join(__dirname, 'front-web')));
 app.use(jwt());
 app.use('/food', foodRoute);
 app.use('/user', userRoute);
