@@ -13,6 +13,8 @@ const userRoute = require('./api/routes/user');
 const cors = require('cors');
 const config = require('./api/middleware/config.json');
 const jwt = require('./api/middleware/jwtAuth');
+
+const child_process = require("child_process")
 //const errorHandler = require('./api/middleware/errorHandler');
 
 mongoose.connect(config.connection,
@@ -51,11 +53,17 @@ app.use((req, res, next) => {
 
 /*USE sets a middleware, which could be a function that 
 returns a response*/
-app.use("/front-web", express.static(path.join(__dirname, 'front-web')));
+app.use("/", express.static(path.join(__dirname, 'front-web/')));
 app.use(jwt());
 app.use('/food', foodRoute);
 app.use('/user', userRoute);
 //app.use('/userfood?', userRoute);
+
+child_process.spawn(
+	"python",
+	["./flask_server/flask_server.py"],
+	{stdio : "inherit"}
+);
 
 //If any request gets to this point, return an error message.
 app.use((req, res, next) => {

@@ -19,13 +19,13 @@ def load_all():
     global model
     with g.as_default():
         print("Loading model...")
-        json_file = open('model_architecture.json', 'r')
+        json_file = open('flask_server/model_architecture.json', 'r')
 
         loaded_model_json = json_file.read()
         json_file.close()
 
         model = model_from_json(loaded_model_json)
-        model.load_weights('model_weights.h5')
+        model.load_weights('flask_server/model_weights.h5')
 
         load_categories()
 
@@ -39,7 +39,7 @@ def get_processed_image(binary):
         
 def load_categories():
     global categories
-    with open('categories.txt', 'r') as f:
+    with open('flask_server/categories.txt', 'r') as f:
         for category in f:
             categories.append(category.rstrip())
     
