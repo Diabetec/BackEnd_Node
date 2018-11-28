@@ -11,6 +11,7 @@ function jwt() {
             // public routes that don't require authentication
             '/user/signup',
             '/user/login',
+            '/food/predict',
         ]
     });
 }
